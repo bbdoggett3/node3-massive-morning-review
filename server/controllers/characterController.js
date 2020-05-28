@@ -3,7 +3,11 @@ id = 0
 
 module.exports = {
     getAllCharacters: (req, res) => {
-        res.status(200).send(masterCharacterList)
+        const db = req.app.get('db')
+
+        db.get_all_characters()
+        .then(characters => res.status(200).send(characters))
+        .catch(error => res.status(500).send(error))
     },
     getCharacter: (req, res) => {
         const {id} = req.params
@@ -11,23 +15,23 @@ module.exports = {
         res.status(200).send(character)
     },
     addCharacter: (req, res) => {
-        const newCharacter = {...req.body}
-        newCharacter.id = id
-        id++
-        masterCharacterList.push(newCharacter)
-        res.status(200).send(masterCharacterList)
+        const {name, image} = req.body
+        const db = req.app.get('db')
+
+        db.add_character([name, image])
+        .then(characters => {
+            res.status(200).send(characters)
+        }).catch(error => res.status(500).send(error))
     },
     editCharacter: (req, res) => {
         const {id} = req.params
         const {name, image} = req.body
-        const index = masterCharacterList.findIndex(character => character.id === +id)
-        const currentCharacter = {...masterCharacterList[index]}
-        masterCharacterList[index] = {
-            id: +id,
-            name: name || currentCharacter.name,
-            image: image || currentCharacter.image
-        }
-        res.status(200).send(masterCharacterList)
+        const db = req.app.get('db')
+
+        db.edit_character([id, name, image])
+        .then(character => {
+            res.status(200).send(character)
+        }).catch(error => res.status(500).send(error))
     },
     deleteCharacter: (req, res) => {
         const {id} = req.params
